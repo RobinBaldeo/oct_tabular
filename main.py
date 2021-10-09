@@ -26,12 +26,25 @@ def reduce_df(df):
 
 
 def main():
-    train = reduce_df(pd.read_csv("train.csv"))
+    # train = reduce_df(pd.read_csv("train.csv"))
+    # train.to_pickle("train")
+    #
+    # test = reduce_df(pd.read_csv("test.csv"))
+    # test.to_pickle("test")
+
+    train = pd.read_pickle("train")
     print(train.head(20))
-    print()
-    print(len(train.index))
-    print()
-    print(len(train[train.target == 0]))
+    # train.to_pickle("train")
+    #
+    test = pd.read_pickle("test")
+    print(test.head(20))
+
+    # for
+    # print(train.head(20))
+    # print()
+    # print(len(train.index))
+    # print()
+    # print(len(train[train.target == 0]))
 
 
 
