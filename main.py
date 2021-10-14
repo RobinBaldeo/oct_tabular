@@ -11,7 +11,8 @@ import xgboost as xgb
 from lightgbm import LGBMClassifier
 # from sklearn.model_selection import  RandomizedSearchCV, KFold
 from catboost import CatBoostClassifier
-from sklearn.linear_model import SGDClassifier
+from sklearn.linear_model import SGDClassifier, LogisticRegression
+
 from collections import namedtuple
 import sys
 np.set_printoptions(threshold=sys.maxsize)
@@ -157,6 +158,29 @@ def main():
 
 
 
+def meta_model():
+    train_meta_x = pd.read_pickle("train_meta_x")
+    train_meta_y = pd.read_pickle("train_meta_y")
+    fold_pred = pd.read_pickle("fold_pred")
+
+
+
+    second_model2 = SGDClassifier(max_iter=10000, loss='log')
+    #
+    second_model2.fit(train_meta_x.values, train_meta_y.loc[:, 0])
+    pred = second_model2.predict_proba(fold_pred)[:, 1]
+
+    final = pd.read_pickle("test")
+    final = pd.DataFrame(final["id"])
+    final = final.merge(pd.DataFrame(pred), right_index=True, left_index=True)
+
+    final.columns = ["id", "target"]
+    final.to_csv("sub_v1.csv", index=False)
+
+
+
+
+
 
 
 
@@ -175,6 +199,7 @@ def main():
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    main()
+    # main()
     # prePorocess()
+    meta_model()
 
