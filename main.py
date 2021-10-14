@@ -162,20 +162,47 @@ def meta_model():
     train_meta_x = pd.read_pickle("train_meta_x")
     train_meta_y = pd.read_pickle("train_meta_y")
     fold_pred = pd.read_pickle("fold_pred")
+    folds = 10
+    # xtrain, xval,ytrain, yval = ms.train_test_split(train_meta_x, train_meta_y.loc[:, 0], test_size=.2, random_state=0)
+
+    pen_ = ["l1", "l2"]
+    c_ = 2.** np.arange(-5, 10, step=2)
 
 
+    # cv = ms.GridSearchCV(estimator=model, param_grid={'C':c_, 'penalty':pen_}, cv=ms.KFold(10))
+    # for counter, (trn, val) in enumerate(df_split.split(x, y)):
+    score_weight = np.zeros((folds, 1))
+    meta_pred = np.zeros((len(fold_pred.index), folds))
+    final_data = np.zeros((len(fold_pred.index), 1))
 
-    second_model2 = SGDClassifier(max_iter=10000, loss='log')
+    df_split = ms.StratifiedKFold(n_splits=folds, shuffle=True, random_state=45)
+    for counter, (trn, val) in enumerate(df_split.split(train_meta_x, train_meta_y.iloc[:,0])):
+        # model = LogisticRegression(n_jobs=-1, max_iter=10000, solver='saga', **{'C': 8.0, 'penalty': 'l2'})
+        model = SGDClassifier(max_iter=10000, loss='log')
+        model.fit(train_meta_x.iloc[trn, :], train_meta_y.loc[trn, 0])
+        meta_pred[:,counter] = model.predict_proba(fold_pred.values)[:, 1]
+        pred = model.predict_proba(train_meta_x.iloc[val, :])[:, 1]
+        score_weight[counter] = roc_auc_score(train_meta_y.loc[val, 0], pred)
+        if counter == folds - 1:
+            score_weight = score_weight / np.sum(score_weight, axis=0)
+            final_data = np.dot(meta_pred, score_weight)
+
+
+    # print(final_data[0:10])
+    # print(cv.best_score_)
+
+
+    # second_model2 = SGDClassifier(max_iter=10000, loss='log')
+    # #
+    # second_model2.fit(train_meta_x.values, train_meta_y.loc[:, 0])
+    # pred = second_model2.predict_proba(fold_pred)[:, 1]
     #
-    second_model2.fit(train_meta_x.values, train_meta_y.loc[:, 0])
-    pred = second_model2.predict_proba(fold_pred)[:, 1]
-
     final = pd.read_pickle("test")
     final = pd.DataFrame(final["id"])
-    final = final.merge(pd.DataFrame(pred), right_index=True, left_index=True)
+    final = final.merge(pd.DataFrame(final_data), right_index=True, left_index=True)
 
     final.columns = ["id", "target"]
-    final.to_csv("sub_v1.csv", index=False)
+    final.to_csv("sub_v4.csv", index=False)
 
 
 
