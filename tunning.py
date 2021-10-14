@@ -127,18 +127,19 @@ class model_best_para:
             "objective": "binary",
             "metric": "auc",
             "verbosity": -1,
-            "boosting_type": 'rf',
+            "boosting_type": 'goss',
             "n_estimators": trial.suggest_int("n_estimators", 100, 1500),
-            "max_depth":trial.suggest_int("max_depth", 1, 8),
+            "max_depth":trial.suggest_int("max_depth", 1, 16),
             # "learning_rate": trial.suggest_loguniform("learning_rate", 0.01, 1.),
             "lambda_l1": trial.suggest_loguniform('lambda_l1', 1e-3, 10.0),
             "lambda_l2": trial.suggest_loguniform('lambda_l2', 1e-3, 10.0),
             "num_leaves": trial.suggest_int('num_leaves', 1, 1000),
             "min_child_samples": trial.suggest_int('min_child_samples', 1, 300),
+            "min_child_weight":trial.suggest_loguniform('min_child_weight', 1e-2, 1e2)
 
-            "feature_fraction": trial.suggest_float("feature_fraction", 0.4, 1.0),
-            "bagging_fraction": trial.suggest_float("bagging_fraction", 0.4, 1.0),
-            "bagging_freq": trial.suggest_int("bagging_freq", 1, 7)
+            # "feature_fraction": trial.suggest_float("feature_fraction", 0.4, 1.0),
+            # "bagging_fraction": trial.suggest_float("bagging_fraction", 0.4, 1.0),
+            # "bagging_freq": trial.suggest_int("bagging_freq", 1, 7)
         }
 
 
@@ -151,9 +152,9 @@ class model_best_para:
 
     def para(self):
         study = optuna.create_study(direction='maximize', study_name="robin")
-        study.optimize(lambda i: self.cat(i, (self.xtrain, self.xval), (self.ytrain, self.yval)),
-                       n_trials=self.num_iter)
-        # study.optimize(lambda i: self.light(i, (self.xtrain, self.xval), (self.ytrain, self.yval)), n_trials=self.num_iter)
+        # study.optimize(lambda i: self.cat(i, (self.xtrain, self.xval), (self.ytrain, self.yval)),
+        #                n_trials=self.num_iter)
+        study.optimize(lambda i: self.light(i, (self.xtrain, self.xval), (self.ytrain, self.yval)), n_trials=self.num_iter)
         # study.optimize(lambda i: self.xgb(i, (self.xtrain, self.xval), (self.ytrain, self.yval)), n_trials=self.num_iter)
         # print(f"best trial : {([j for i, j in study.best_trial.intermediate_values.items()])[-1]}")
         print()
